@@ -11,9 +11,16 @@
       <video id="live" playsinline autoplay muted></video>
       <div>
         <button id="startButton">Start camera</button>
+        <button id="recordButton" disabled>Start Recording</button>
       </div>
     </div>
     <script>
+      let mediaRecorder;
+      let recordedBlobs;
+
+      const recordedVideo = document.querySelector('video#record');
+      const recordButton = document.querySelector('button#recordButton');
+
       async function init(constraints) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -24,11 +31,49 @@
       }
 
       function handleSuccess(stream) {
+        recordButton.disabled = false;
         console.log('getUserMedia() got stream: ', stream);
         window.stream = stream;
         const liveVideo = document.querySelector('video#live');
         liveVideo.srcObject = stream;
       }
+
+      function startRecording() {
+        recordedBlobs = [];
+        try {
+          mediaRecorder = new MediaRecorder(window.stream);
+        } catch (e) {
+          console.error('Exception while creating MediaRecorder: ', e);
+          return;
+        }
+
+        recordButton.textContent = 'Stop Recording';
+        mediaRecorder.onstop = (event) => {
+          console.log('Recorder stopped: ', event);
+          console.log('Recorder Blobs', recordedBlobs);
+        };
+        mediaRecorder.ondataavailable = handleDataAvailable;
+        mediaRecorder.start();
+      }
+
+      function stopRecording() {
+        mediaRecorder.stop();
+      }
+
+      function handleDataAvailable(event) {
+        if (event.data && event.data.size > 0) {
+          recordedBlobs.push(event.data);
+        }
+      }
+
+      recordButton.addEventListener('click', () => {
+        if (recordButton.textContent === 'Start Recording') {
+          startRecording();
+        } else {
+          stopRecording();
+          recordButton.textContent = 'Start Recording';
+        }
+      });
 
       document
         .querySelector('button#startButton')
