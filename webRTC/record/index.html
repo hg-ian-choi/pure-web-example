@@ -9,9 +9,12 @@
   <body>
     <div id="container">
       <video id="live" playsinline autoplay muted></video>
+      <video id="record" playsinline loop></video>
       <div>
         <button id="startButton">Start camera</button>
         <button id="recordButton" disabled>Start Recording</button>
+        <button id="playRecord" disabled>PlayRecord</button>
+        <button id="download" disabled>Download</button>
       </div>
     </div>
     <script>
@@ -20,6 +23,7 @@
 
       const recordedVideo = document.querySelector('video#record');
       const recordButton = document.querySelector('button#recordButton');
+      const playButton = document.querySelector('button#playRecord');
 
       async function init(constraints) {
         try {
@@ -48,6 +52,7 @@
         }
 
         recordButton.textContent = 'Stop Recording';
+        playButton.disabled = true;
         mediaRecorder.onstop = (event) => {
           console.log('Recorder stopped: ', event);
           console.log('Recorder Blobs', recordedBlobs);
@@ -72,7 +77,17 @@
         } else {
           stopRecording();
           recordButton.textContent = 'Start Recording';
+          playButton.disabled = false;
         }
+      });
+
+      playButton.addEventListener('click', () => {
+        const buffer = new Blob(recordedBlobs);
+        recordedVideo.src = null;
+        recordedVideo.srcObject = null;
+        recordedVideo.src = window.URL.createObjectURL(buffer);
+        recordedVideo.controls = true;
+        recordedVideo.play();
       });
 
       document
