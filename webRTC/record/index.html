@@ -24,6 +24,7 @@
       const recordedVideo = document.querySelector('video#record');
       const recordButton = document.querySelector('button#recordButton');
       const playButton = document.querySelector('button#playRecord');
+      const downloadButton = document.querySelector('button#download');
 
       async function init(constraints) {
         try {
@@ -53,6 +54,7 @@
 
         recordButton.textContent = 'Stop Recording';
         playButton.disabled = true;
+        downloadButton.disabled = true;
         mediaRecorder.onstop = (event) => {
           console.log('Recorder stopped: ', event);
           console.log('Recorder Blobs', recordedBlobs);
@@ -78,6 +80,7 @@
           stopRecording();
           recordButton.textContent = 'Start Recording';
           playButton.disabled = false;
+          downloadButton.disabled = false;
         }
       });
 
@@ -88,6 +91,23 @@
         recordedVideo.src = window.URL.createObjectURL(buffer);
         recordedVideo.controls = true;
         recordedVideo.play();
+      });
+
+      downloadButton.addEventListener('click', () => {
+        const blob = new Blob(recordedBlobs, {
+          type: 'video/webm',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'test.webm';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 100);
       });
 
       document
