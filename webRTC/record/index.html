@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webRTC</title>
+  </head>
+  <body>
+    <div id="container">
+      <video id="live" playsinline autoplay muted></video>
+      <div>
+        <button id="startButton">Start camera</button>
+      </div>
+    </div>
+    <script>
+      async function init(constraints) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          handleSuccess(stream);
+        } catch (e) {
+          console.error('navigator.getUserMedia error: ', e);
+        }
+      }
+
+      function handleSuccess(stream) {
+        console.log('getUserMedia() got stream: ', stream);
+        window.stream = stream;
+        const liveVideo = document.querySelector('video#live');
+        liveVideo.srcObject = stream;
+      }
+
+      document
+        .querySelector('button#startButton')
+        .addEventListener('click', async () => {
+          const constraints = {
+            audio: {},
+            video: {
+              window: 1280,
+              height: 720,
+            },
+          };
+          console.log('Using media constraints', constraints);
+          await init(constraints);
+        });
+    </script>
+  </body>
+</html>
