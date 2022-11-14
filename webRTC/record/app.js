@@ -1,4 +1,4 @@
-let stream;
+let stream = null;
 
 const openCamButton = document.querySelector('button#openCamButton');
 const captureButton = document.querySelector('button#captureButton');
@@ -6,6 +6,7 @@ const preview = document.querySelector('video#preview');
 const capture = document.querySelector('canvas#capture');
 
 async function openCam(type) {
+  await release();
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices
       .getUserMedia({
@@ -28,6 +29,14 @@ async function onCapture() {
   const context = capture.getContext('2d');
   context.drawImage(preview, 0, 0, 300, 225);
   capture.style.display = 'block';
+}
+
+async function release() {
+  preview.srcObject = null;
+  preview.src = null;
+  stream = null;
+  preview.style.display = 'none';
+  capture.style.display = 'none';
 }
 
 openCamButton.addEventListener('click', async function () {
