@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webRTC</title>
+  </head>
+  <body>
+    <div style="margin: 0 10px 50px">
+      <h1>Hello, World</h1>
+      <br />
+      <div>You opened <span id="camType">Front</span> Camera</div>
+      <br />
+      <video id="preview" playsinline muted loop autoplay></video>
+      <video id="playRecord" playsinline muted loop autoplay></video>
+      <canvas></canvas>
+      <br />
+      <button id="openCamButton">Open Cam</button>
+      <button id="captureButton" disabled>Capture</button>
+      <button id="recordButton" disabled>Start Record</button>
+      <button id="playRecordButton" disabled>Play Record</button>
+      <button id="downloadButton" disabled>Download</button>
+    </div>
+    <script src="./app.js" async></script>
+  </body>
+</html>
