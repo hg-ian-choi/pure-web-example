@@ -1,11 +1,22 @@
 let stream = null;
+let type = 'user';
 
 const openCamButton = document.querySelector('button#openCamButton');
+const changeCamButton = document.querySelector('button#changeCamButton');
 const captureButton = document.querySelector('button#captureButton');
 const preview = document.querySelector('video#preview');
 const capture = document.querySelector('canvas#capture');
 
-async function openCam(type) {
+async function changeCam() {
+  if (type === 'user') {
+    type = 'enviroment';
+  } else {
+    type = 'user';
+  }
+  openCam(type);
+}
+
+async function openCam(_type) {
   await release();
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices
@@ -18,8 +29,10 @@ async function openCam(type) {
           preview.srcObject = _stream;
           preview.play();
           stream = _stream;
+          _type;
           preview.style.display = 'block';
           captureButton.disabled = false;
+          changeCamButton.disabled = false;
         }
       });
   }
@@ -40,8 +53,12 @@ async function release() {
 }
 
 openCamButton.addEventListener('click', async function () {
-  await openCam('user');
+  await openCam(type);
 });
+
 captureButton.addEventListener('click', async function () {
   await onCapture();
+});
+changeCamButton.addEventListener('click', async function () {
+  await changeCam();
 });
