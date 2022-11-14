@@ -8,11 +8,13 @@ const camTypeContext = document.querySelector('span#camType');
 
 const preview = document.querySelector('video#preview');
 const capture = document.querySelector('canvas#capture');
+const playRecord = document.querySelector('video#playRecord');
 
 const openCamButton = document.querySelector('button#openCamButton');
 const changeCamButton = document.querySelector('button#changeCamButton');
 const captureButton = document.querySelector('button#captureButton');
 const recordButton = document.querySelector('button#recordButton');
+const playRecordButton = document.querySelector('button#playRecordButton');
 
 async function changeCam() {
   if (camType === 'user') {
@@ -57,6 +59,9 @@ async function onRecord() {
   if (isRecording) {
     mediaRecorder.stop();
     recordButton.textContent = 'Start Record';
+    playRecordButton.disabled = false;
+    openCamButton.disabled = false;
+    changeCamButton.disabled = false;
     isRecording = false;
   } else {
     mediaRecorder = new MediaRecorder(stream, {
@@ -67,13 +72,27 @@ async function onRecord() {
     };
     mediaRecorder.start();
     recordButton.textContent = 'Stop Record';
+    playRecord.pause();
+    playRecord.style.display = 'none';
+    playRecordButton.disabled = true;
+    openCamButton.disabled = true;
+    changeCamButton.disabled = true;
     isRecording = true;
   }
+}
+
+async function onPlayRecord() {
+  playRecord.style.display = 'block';
+  playRecord.src = window.URL.createObjectURL(blobs);
+  playRecord.play();
 }
 
 async function release() {
   preview.style.display = 'none';
   capture.style.display = 'none';
+  playRecord.style.display = 'none';
+
+  playRecordButton.disabled = true;
 }
 
 openCamButton.addEventListener('click', async function () {
@@ -90,4 +109,8 @@ changeCamButton.addEventListener('click', async function () {
 
 recordButton.addEventListener('click', async function () {
   await onRecord();
+});
+
+playRecordButton.addEventListener('click', async function () {
+  await onPlayRecord();
 });
