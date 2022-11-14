@@ -1,20 +1,26 @@
-let stream = null;
+let stream;
 let camType = 'user';
+let isRecording = false;
+let mediaRecorder;
+let blobs;
+
+const camTypeContext = document.querySelector('span#camType');
+
+const preview = document.querySelector('video#preview');
+const capture = document.querySelector('canvas#capture');
 
 const openCamButton = document.querySelector('button#openCamButton');
 const changeCamButton = document.querySelector('button#changeCamButton');
-const camTypeContext = document.querySelector('span#camType');
 const captureButton = document.querySelector('button#captureButton');
-const preview = document.querySelector('video#preview');
-const capture = document.querySelector('canvas#capture');
+const recordButton = document.querySelector('button#recordButton');
 
 async function changeCam() {
   if (camType === 'user') {
     camType = 'enviroment';
-    camTypeContext.context = 'Back-End';
+    camTypeContext.textContent = 'Back-End';
   } else {
     camType = 'user';
-    camTypeContext.context = 'Front-End';
+    camTypeContext.textContent = 'Front-End';
   }
   openCam(camType);
 }
@@ -35,6 +41,7 @@ async function openCam(_type) {
           preview.style.display = 'block';
           captureButton.disabled = false;
           changeCamButton.disabled = false;
+          recordButton.disabled = false;
         }
       });
   }
@@ -44,6 +51,24 @@ async function onCapture() {
   const context = capture.getContext('2d');
   context.drawImage(preview, 0, 0, 300, 225);
   capture.style.display = 'block';
+}
+
+async function onRecord() {
+  if (isRecording) {
+    mediaRecorder.stop();
+    recordButton.textContent = 'Start Record';
+    isRecording = false;
+  } else {
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm;codecs=vp8,opus',
+    });
+    mediaRecorder.ondataavailable = function (_event) {
+      blobs = new Blob([_event.data], { type: _event.data.type });
+    };
+    mediaRecorder.start();
+    recordButton.textContent = 'Stop Record';
+    isRecording = true;
+  }
 }
 
 async function release() {
@@ -58,6 +83,11 @@ openCamButton.addEventListener('click', async function () {
 captureButton.addEventListener('click', async function () {
   await onCapture();
 });
+
 changeCamButton.addEventListener('click', async function () {
   await changeCam();
+});
+
+recordButton.addEventListener('click', async function () {
+  await onRecord();
 });
