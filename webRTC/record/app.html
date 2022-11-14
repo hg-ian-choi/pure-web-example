@@ -12,9 +12,23 @@
       <br />
       <div>You opened <span id="camType">Front</span> Camera</div>
       <br />
-      <video id="preview" playsinline muted loop autoplay></video>
+      <video
+        id="preview"
+        width="300"
+        height="225"
+        style="display: none"
+        playsinline
+        muted
+        loop
+        autoplay
+      ></video>
+      <canvas
+        id="capture"
+        width="300"
+        height="225"
+        style="display: none"
+      ></canvas>
       <video id="playRecord" playsinline muted loop autoplay></video>
-      <canvas id="capture"></canvas>
       <br />
       <button id="openCamButton">Open Cam</button>
       <button id="captureButton" disabled>Capture</button>
