@@ -1,19 +1,22 @@
 let stream = null;
-let type = 'user';
+let camType = 'user';
 
 const openCamButton = document.querySelector('button#openCamButton');
 const changeCamButton = document.querySelector('button#changeCamButton');
+const camTypeContext = document.querySelector('span#camType');
 const captureButton = document.querySelector('button#captureButton');
 const preview = document.querySelector('video#preview');
 const capture = document.querySelector('canvas#capture');
 
 async function changeCam() {
-  if (type === 'user') {
-    type = 'enviroment';
+  if (camType === 'user') {
+    camType = 'enviroment';
+    camTypeContext.context = 'Back-End';
   } else {
-    type = 'user';
+    camType = 'user';
+    camTypeContext.context = 'Front-End';
   }
-  openCam(type);
+  openCam(camType);
 }
 
 async function openCam(_type) {
@@ -22,14 +25,13 @@ async function openCam(_type) {
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
-        video: { facingMode: type },
+        video: { facingMode: _type },
       })
       .then((_stream) => {
         if ('srcObject' in preview) {
+          stream = _stream;
           preview.srcObject = _stream;
           preview.play();
-          stream = _stream;
-          _type;
           preview.style.display = 'block';
           captureButton.disabled = false;
           changeCamButton.disabled = false;
@@ -45,15 +47,12 @@ async function onCapture() {
 }
 
 async function release() {
-  preview.srcObject = null;
-  preview.src = null;
-  stream = null;
   preview.style.display = 'none';
   capture.style.display = 'none';
 }
 
 openCamButton.addEventListener('click', async function () {
-  await openCam(type);
+  await openCam(camType);
 });
 
 captureButton.addEventListener('click', async function () {
