@@ -34,7 +34,7 @@ async function openCam(_type) {
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
-        video: { facingMode: _type },
+        video: { facingMode: { exact: _type } },
       })
       .then((_stream) => {
         if ('srcObject' in preview) {
@@ -66,9 +66,7 @@ async function onRecord() {
     downloadButton.disabled = false;
     isRecording = false;
   } else {
-    mediaRecorder = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp8,opus',
-    });
+    mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = function (_event) {
       blobs = new Blob([_event.data], { type: _event.data.type });
     };

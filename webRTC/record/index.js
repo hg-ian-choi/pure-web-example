@@ -1,106 +1,121 @@
-
+let stream;
+let camType = 'user';
+let isRecording = false;
 let mediaRecorder;
-let recordedBlobs;
+let blobs;
 
-const recordedVideo = document.querySelector('video#record');
+const camTypeContext = document.querySelector('span#camType');
+
+const preview = document.querySelector('video#preview');
+const playRecord = document.querySelector('video#playRecord');
+
+const changeCamButton = document.querySelector('button#changeCamButton');
 const recordButton = document.querySelector('button#recordButton');
-const playButton = document.querySelector('button#playRecord');
-const downloadButton = document.querySelector('button#download');
+const downloadButton = document.querySelector('button#downloadButton');
 
-async function init(constraints) {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    handleSuccess(stream);
-  } catch (e) {
-    console.error('navigator.getUserMedia error: ', e);
-  }
-}
-
-function handleSuccess(stream) {
-  recordButton.disabled = false;
-  console.log('getUserMedia() got stream: ', stream);
-  window.stream = stream;
-  const liveVideo = document.querySelector('video#live');
-  liveVideo.srcObject = stream;
-}
-
-function startRecording() {
-  recordedBlobs = [];
-  try {
-    mediaRecorder = new MediaRecorder(window.stream);
-  } catch (e) {
-    console.error('Exception while creating MediaRecorder: ', e);
-    return;
-  }
-
-  recordButton.textContent = 'Stop Recording';
-  playButton.disabled = true;
-  downloadButton.disabled = true;
-  mediaRecorder.onstop = (event) => {
-    console.log('Recorder stopped: ', event);
-    console.log('Recorder Blobs', recordedBlobs);
-  };
-  mediaRecorder.ondataavailable = handleDataAvailable;
-  mediaRecorder.start();
-}
-
-function stopRecording() {
-  mediaRecorder.stop();
-}
-
-function handleDataAvailable(event) {
-  if (event.data && event.data.size > 0) {
-    recordedBlobs.push(event.data);
-  }
-}
-
-recordButton.addEventListener('click', () => {
-  if (recordButton.textContent === 'Start Recording') {
-    startRecording();
+async function changeCam() {
+  if (camType === 'user') {
+    camType = 'enviroment';
+    camTypeContext.textContent = 'Back-End';
   } else {
-    stopRecording();
-    recordButton.textContent = 'Start Recording';
-    playButton.disabled = false;
-    downloadButton.disabled = false;
+    camType = 'user';
+    camTypeContext.textContent = 'Front-End';
   }
+  openCam(camType);
+}
+
+async function openCam(_type) {
+  if (await isMobile()) {
+    console.log('is mobile');
+    _type = { exact: _type };
+  }
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    await navigator.mediaDevices
+      .getUserMedia({
+        audio: true,
+        video: { facingMode: _type },
+      })
+      .then((_stream) => {
+        if ('srcObject' in preview) {
+          stream = _stream;
+          preview.srcObject = _stream;
+          preview.play();
+          preview.style.display = 'block';
+          changeCamButton.disabled = false;
+          recordButton.disabled = false;
+        }
+      });
+  }
+}
+
+async function onRecord() {
+  if (isRecording) {
+    await stopRecording();
+  } else {
+    await openCam(camType);
+    await startRecording();
+  }
+}
+
+async function startRecording() {
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = function (_event) {
+    mediaRecorder.blobs = new Blob([_event.data], {
+      type: _event.data.type,
+    });
+  };
+  mediaRecorder.onstop = function (_event) {
+    blobs = _event.target.blobs;
+    onPlayRecord(_event.target.blobs);
+  };
+  mediaRecorder.start();
+  recordButton.textContent = 'Stop Record';
+  changeCamButton.disabled = true;
+  downloadButton.disabled = true;
+  isRecording = true;
+}
+
+async function stopRecording() {
+  await mediaRecorder.stop();
+  preview.pause();
+  preview.style.display = 'none';
+  recordButton.textContent = 'Start Record';
+  changeCamButton.disabled = false;
+  downloadButton.disabled = false;
+  isRecording = false;
+}
+
+async function onPlayRecord(_blobs) {
+  playRecord.style.display = 'block';
+  playRecord.src = window.URL.createObjectURL(_blobs);
+  playRecord.play();
+}
+
+async function onDownload() {
+  const aElement = document.createElement('a');
+  const href = window.URL.createObjectURL(blobs);
+  aElement.href = href;
+  aElement.download = `${new Date().getTime()}.mp4`;
+  document.body.appendChild(aElement);
+  aElement.click();
+  document.body.removeChild(aElement);
+  window.URL.revokeObjectURL(href);
+}
+
+async function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
+changeCamButton.addEventListener('click', async function () {
+  await changeCam();
 });
 
-playButton.addEventListener('click', () => {
-  const buffer = new Blob(recordedBlobs);
-  recordedVideo.src = null;
-  recordedVideo.srcObject = null;
-  recordedVideo.src = window.URL.createObjectURL(buffer);
-  recordedVideo.controls = true;
-  recordedVideo.play();
+recordButton.addEventListener('click', async function () {
+  await onRecord();
 });
 
-downloadButton.addEventListener('click', () => {
-  const blob = new Blob(recordedBlobs, {
-    type: 'video/webm',
-  });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.style.display = 'none';
-  a.href = url;
-  a.download = 'test.webm';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  }, 100);
+downloadButton.addEventListener('click', async function () {
+  await onDownload();
 });
-
-document
-  .querySelector('button#startButton')
-  .addEventListener('click', async () => {
-    const constraints = {
-      audio: {},
-      video: {
-        window: 1280,
-        height: 720,
-      },
-    };
-    console.log('Using media constraints', constraints);
-    await init(constraints);
-  });
